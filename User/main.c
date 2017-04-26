@@ -9,6 +9,7 @@
 #include "delay.h"
 #include "adc.h"
 
+
 // Luminous fluxes  
 float red_lm = 1.315; 		// maximum brightness of red, measured in lab.
 float green_lm	= 2.553;	// maximum brightness of green, measured in lab.
@@ -52,6 +53,10 @@ void RGB_ratio(float xy[], float dutyCycles[]){
 osThreadDef(Red, osPriorityNormal, 1, 0); //Define Blinky Thread
 osThreadDef(Blue, osPriorityNormal, 1, 0); //Define Blinky Thread
 osThreadDef(Green, osPriorityNormal, 1, 0); //Define Blinky Thread
+osThreadDef(AutoReset, osPriorityNormal, 1, 0); //Define Blinky Thread
+
+
+
 
 /* main: initialize and start the system */
 int main (void) {
@@ -74,9 +79,9 @@ int main (void) {
 	//	ADC potentiometer reading
 	
 	ADC_Configuration();
-	brightness = 1.000 - (1.000 * readADC1(0))/4095; //Brightness (direction reversed)
-	target_xy[0] = 0.800 - (1.000 * readADC1(1))/4095; //x (direction reversed)
-	target_xy[1] = 0.900 - (1.000 * readADC1(2))/4095; //y (direction reversed)
+	brightness = 0.900 - (0.900 * readADC1(0))/4095; //Brightness (direction reversed)
+	target_xy[0] = 0.800 - (0.800 * readADC1(1))/4095; //x (direction reversed)
+	target_xy[1] = 0.900 - (0.900 * readADC1(2))/4095; //y (direction reversed)
 	
 	// create 'thread' functions that start executing,
   // example: tid_name = osThreadCreate (osThread(name), NULL);
@@ -91,7 +96,7 @@ int main (void) {
 	osThreadCreate(osThread(Green), &dutyCycleGreen); 	
 	osThreadCreate(osThread(Red), &dutyCycleRed); 	
 	osThreadCreate(osThread(Blue), &dutyCycleBlue); 
-
+	osThreadCreate(osThread(AutoReset), NULL); 
   osKernelStart ();                         // start thread execution 
-	
+	//NVIC_SystemReset();
 }
