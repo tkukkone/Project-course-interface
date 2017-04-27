@@ -4,7 +4,7 @@ void ADC_Configuration(void)
 {
   ADC_InitTypeDef  ADC_InitStructure;
   /* PCLK2 is the APB2 clock */
-  /* ADCCLK = PCLK2/6 = 72/6 = 12MHz*/
+  /* ADCCLK = PCLK2/6 = 72/8 = 9MHz*/
   RCC_ADCCLKConfig(RCC_PCLK2_Div8);
 
   /* Enable ADC1 clock so that we can talk to it */

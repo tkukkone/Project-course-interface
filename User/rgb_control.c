@@ -40,6 +40,6 @@ void Green (void const *dutyCycle) {
 }
 
 void AutoReset (void) {
-	delayUS_DWT(10000);	
-	NVIC_SystemReset();
+	delayUS_DWT(10000);	//AutoReset delay
+	NVIC_SystemReset(); //Resets microcontroller
 }

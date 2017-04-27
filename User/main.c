@@ -10,11 +10,11 @@
 #include "adc.h"
 
 
-// Luminous fluxes  
+	/************ Luminous fluxes ***********/
 float red_lm = 1.315; 		// maximum brightness of red, measured in lab.
 float green_lm	= 2.553;	// maximum brightness of green, measured in lab.
 float blue_lm = 0.466;  // maximum brightness of blue, measured in lab.
-float target_xy[2] = {0.2, 0.2}; //SET TARGET COLOR HERE
+float target_xy[2] = {0.2, 0.2}; //SET TARGET COLOR HERE (disable potcontrol first!)
 float brightness = 1.0; //brightness between 0 and 1
 
 
@@ -50,15 +50,13 @@ void RGB_ratio(float xy[], float dutyCycles[]){
 	dutyCycles[2] = (blue_lm / total_ratio * ratio_B)/blue_lm;	//Blue duty cycle
 }
 
-osThreadDef(Red, osPriorityNormal, 1, 0); //Define Blinky Thread
-osThreadDef(Blue, osPriorityNormal, 1, 0); //Define Blinky Thread
-osThreadDef(Green, osPriorityNormal, 1, 0); //Define Blinky Thread
-osThreadDef(AutoReset, osPriorityNormal, 1, 0); //Define Blinky Thread
+	/***********Defining Threads************/
+osThreadDef(Red, osPriorityNormal, 1, 0); //Define Red PWM Thread
+osThreadDef(Blue, osPriorityNormal, 1, 0); //Define Blue PWM Thread
+osThreadDef(Green, osPriorityNormal, 1, 0); //Define Green PWM Thread
+osThreadDef(AutoReset, osPriorityNormal, 1, 0); //Define AutoReset thread
 
-
-
-
-/* main: initialize and start the system */
+// main: initialize and start the system
 int main (void) {
   osKernelInitialize ();                    // initialize CMSIS-RTOS
 
@@ -76,27 +74,28 @@ int main (void) {
 	*DWT_CYCCNT = 0;                  // clear DWT cycle counter
 	*DWT_CONTROL = *DWT_CONTROL | 1;  // enable DWT cycle counter
    
-	//	ADC potentiometer reading
+	/******************* ADC ******************/
+	// Comment these lines to disable potcontrol
+	ADC_Configuration(); //	12-bit ADC potentiometer reading config
+	brightness = 1.000 - (1.100 * readADC1(0))/4095; //Brightness (direction reversed)
+	target_xy[0] = 0.750 - (0.800 * readADC1(1))/4095; //x (direction reversed)
+	target_xy[1] = 0.800 - (0.900 * readADC1(2))/4095; //y (direction reversed)
 	
-	ADC_Configuration();
-	brightness = 0.900 - (0.900 * readADC1(0))/4095; //Brightness (direction reversed)
-	target_xy[0] = 0.800 - (0.800 * readADC1(1))/4095; //x (direction reversed)
-	target_xy[1] = 0.900 - (0.900 * readADC1(2))/4095; //y (direction reversed)
-	
-	// create 'thread' functions that start executing,
-  // example: tid_name = osThreadCreate (osThread(name), NULL);
-	
+	/**************** Duty cycles ****************/
 	float dutyCycles[3];
-	
 	RGB_ratio(target_xy, dutyCycles);
 	
 	float dutyCycleRed = dutyCycles[0] * brightness;
 	float dutyCycleGreen = dutyCycles[1] * brightness;
 	float dutyCycleBlue = dutyCycles[2] * brightness;
+	
+	/******************* Threads ******************/
+	// create 'thread' functions that start executing,
+  // example: tid_name = osThreadCreate (osThread(name), NULL);
 	osThreadCreate(osThread(Green), &dutyCycleGreen); 	
 	osThreadCreate(osThread(Red), &dutyCycleRed); 	
 	osThreadCreate(osThread(Blue), &dutyCycleBlue); 
-	osThreadCreate(osThread(AutoReset), NULL); 
+	osThreadCreate(osThread(AutoReset), NULL); //AutoReset thread
+	
   osKernelStart ();                         // start thread execution 
-	//NVIC_SystemReset();
 }
