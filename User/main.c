@@ -14,33 +14,31 @@
 float red_lm = 1.315; 		// maximum brightness of red, measured in lab.
 float green_lm	= 2.553;	// maximum brightness of green, measured in lab.
 float blue_lm = 0.466;  // maximum brightness of blue, measured in lab.
-float target_xy[2] = {0.2, 0.2}; //SET TARGET COLOR HERE (disable potcontrol first!)
+Point target = {0.2, 0.2}; //SET TARGET COLOR HERE (disable potcontrol first!)
 float brightness = 1.0; //brightness between 0 and 1
 
 
-void RGB_ratio(float xy[], float dutyCycles[]){
-	float xR = 0.6907;	//Red x
-	float yR = 0.3092;	//Red y
-	float xG = 0.1516;	//Green x
-	float yG = 0.7445;	//Green y
-	float xB = 0.1296;	//Blue x
-	float yB = 0.0627; 	//Blue y
+void RGB_ratio(Point target, float dutyCycles[]){
+	Point red = {0.6907, 0.3902};
+	Point green = {0.1516, 0.7445};
+	Point blue = {0.1296, 0.0627};
+	Point triangle[] = {red, green, blue};
+	MovePointWithinTriangle(triangle, &target);
+	
 	
 	// For derivation of ratios see 
 	// http://www.ledsmagazine.com/articles/print/volume-10/issue-6/features/understand-rgb-led-mixing-ratios-to-realize-optimal-color-in-signs-and-displays-magazine.html
-	float xD = xy[0];
-	float yD = xy[1];
-	float mRB = (yR - yB)/(xR-xB);
-	float cRB = yB - mRB*xB;
+	float mRB = (red.y - blue.y)/(red.x-blue.x);
+	float cRB = blue.y - mRB*blue.x;
 
-	float mGD = (yG-yD)/(xG-xD);
-	float cGD = yG-mGD*xG;
+	float mGD = (green.y-target.y)/(green.x-target.x);
+	float cGD = green.y-mGD*green.x;
 
 	float xP = (cGD-cRB)/(mRB-mGD);
 	float yP = mRB * xP + cRB;
 
-	float R_RB = -(yR/yB)*(yB-yP) / (yR-yP);
-	float R_GP = -(yG/yP)*(yP-yD) / (yG-yD);
+	float R_RB = -(red.y/blue.y)*(blue.y-yP) / (red.y-yP);
+	float R_GP = -(green.y/yP)*(yP-target.y) / (green.y-target.y);
 	float ratio_R = (R_RB)/(R_RB+1); 	//Red
 	float ratio_G = R_GP;							//Green
 	float ratio_B = 1/(R_RB+1);				//Blue
@@ -78,12 +76,12 @@ int main (void) {
 	// Comment these lines to disable potcontrol
 	ADC_Configuration(); //	12-bit ADC potentiometer reading config
 	brightness = 1.000 - (1.100 * readADC1(0))/4095; //Brightness (direction reversed)
-	target_xy[0] = 0.750 - (0.800 * readADC1(1))/4095; //x (direction reversed)
-	target_xy[1] = 0.800 - (0.900 * readADC1(2))/4095; //y (direction reversed)
+	target.x = 0.750 - (0.800 * readADC1(1))/4095; //x (direction reversed)
+	target.y = 0.800 - (0.900 * readADC1(2))/4095; //y (direction reversed)
 	
 	/**************** Duty cycles ****************/
 	float dutyCycles[3];
-	RGB_ratio(target_xy, dutyCycles);
+	RGB_ratio(target, dutyCycles);
 	
 	float dutyCycleRed = dutyCycles[0] * brightness;
 	float dutyCycleGreen = dutyCycles[1] * brightness;
