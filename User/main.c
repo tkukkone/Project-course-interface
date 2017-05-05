@@ -18,12 +18,13 @@ Point target = {0.2, 0.2}; //SET TARGET COLOR HERE (disable potcontrol first!)
 float brightness = 1.0; //brightness between 0 and 1
 
 
+
 void RGB_ratio(Point target, float dutyCycles[]){
-	Point red = {0.6907, 0.3902};
+	Point red = {0.6907, 0.3092};
 	Point green = {0.1516, 0.7445};
 	Point blue = {0.1296, 0.0627};
 	Point triangle[] = {red, green, blue};
-	MovePointWithinTriangle(triangle, &target);
+	//MovePointWithinTriangle(triangle, &target); 
 	
 	
 	// For derivation of ratios see 
@@ -75,9 +76,12 @@ int main (void) {
 	/******************* ADC ******************/
 	// Comment these lines to disable potcontrol
 	ADC_Configuration(); //	12-bit ADC potentiometer reading config
-	brightness = 1.000 - (1.100 * readADC1(0))/4095; //Brightness (direction reversed)
-	target.x = 0.750 - (0.800 * readADC1(1))/4095; //x (direction reversed)
-	target.y = 0.800 - (0.900 * readADC1(2))/4095; //y (direction reversed)
+	//brightness = 1.000 - (1.100 * readADC1(0))/4095; //Brightness (direction reversed)
+	//target.x = 0.750 - (0.800 * readADC1(1))/4095; //x (direction reversed)
+	//target.y = 0.800 - (0.900 * readADC1(2))/4095; //y (direction reversed)
+
+
+	float resetDelay = 10000; // AutoReset delay (us)
 	
 	/**************** Duty cycles ****************/
 	float dutyCycles[3];
@@ -93,7 +97,7 @@ int main (void) {
 	osThreadCreate(osThread(Green), &dutyCycleGreen); 	
 	osThreadCreate(osThread(Red), &dutyCycleRed); 	
 	osThreadCreate(osThread(Blue), &dutyCycleBlue); 
-	osThreadCreate(osThread(AutoReset), NULL); //AutoReset thread
+	osThreadCreate(osThread(AutoReset), &resetDelay); //AutoReset thread
 	
   osKernelStart ();                         // start thread execution 
 }

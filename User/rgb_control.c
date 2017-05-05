@@ -34,8 +34,8 @@ void Green (void const *dutyCycle) {
 	}
 }
 
-void AutoReset (void) {
-	delayUS_DWT(10000);	//AutoReset delay
+void AutoReset (void const *resetDelay) {
+	delayUS_DWT(*(float*)resetDelay);	//AutoReset delay
 	NVIC_SystemReset(); //Resets microcontroller
 }
 
@@ -128,8 +128,11 @@ void MovePointWithinTriangle( const Point* triangle, Point* pointToMove ) {
             t = 1.f - s;
         }
     }
-    pointToMove->x = triangle[0].x + s * edge0.x + t * edge1.x;
-    pointToMove->y = triangle[0].y + s * edge0.y + t * edge1.y;
+    //pointToMove->x = triangle[0].x + s * edge0.x + t * edge1.x;
+    //pointToMove->y = triangle[0].y + s * edge0.y + t * edge1.y;
+		//pointToMove[0].x = 0.5;
+		//pointToMove[0].y = 0.5;
+		
 }
 
 

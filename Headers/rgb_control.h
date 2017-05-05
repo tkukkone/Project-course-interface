@@ -6,7 +6,7 @@
 void Red (void const *dutyCycle);
 void Blue (void const *dutyCycle);
 void Green (void const *dutyCycle);
-void AutoReset (void) ;
+void AutoReset (void const *resetDelay) ;
 
 
 typedef struct Point{
