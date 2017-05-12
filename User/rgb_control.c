@@ -1,138 +1,125 @@
 #include "rgb_control.h"
 #include "delay.h"
+#include "adc.h"
+#include "stdlib.h"
+
+//Change brightnesses in RGB_ratio function
+//float red_lm = 1.315; 		// maximum brightness of red, measured in lab.
+//float green_lm	= 2.553;	// maximum brightness of green, measured in lab.
+//float blue_lm = 0.466;  // maximum brightness of blue, measured in lab.
+//Point target = {0.2, 0.2}; //SET TARGET COLOR HERE (disable potcontrol first!)
+
+unsigned onDelayRed;
+unsigned onDelayGreen;
+unsigned onDelayBlue;
+
 void Red (void const *dutyCycle) {
-	unsigned onDelayRed = *(float*)dutyCycle * 1000;
-	unsigned offDelayRed = 1000-onDelayRed;
+	//unsigned onDelayRed = *(float*)dutyCycle * 1000;
+	//unsigned offDelayRed = 1000-onDelayRed;
 	while (1) {
 		GPIOB->BSRR = (1<<13);			//LED on: set PortB.13
 		delayUS_DWT(onDelayRed);					//pause
 		GPIOB->BRR = (1<<13);				//LED off: clear PortB.13
-		
-		delayUS_DWT(offDelayRed);					//pause
+		delayUS_DWT(1000-onDelayRed);					//pause
 	}
 }
 
 void Blue (void const *dutyCycle) {
-	unsigned onDelayBlue = *(float*)dutyCycle * 1000;
-	unsigned offDelayBlue = 1000-onDelayBlue;
+	//unsigned onDelayBlue = *(float*)dutyCycle * 1000;
+	//unsigned offDelayBlue = 1000-onDelayBlue;
 	while (1) {
 		GPIOB->BSRR = (1<<11);			//LED on: set PortB.11
 		delayUS_DWT(onDelayBlue);	
 		GPIOB->BRR = (1<<11);				//LED off: clear PortB.11
-		delayUS_DWT(offDelayBlue);				
+		delayUS_DWT(1000-onDelayBlue);				
 	}
 }
 
 void Green (void const *dutyCycle) {
-	unsigned onDelayGreen = *(float*)dutyCycle * 1000;
-	unsigned offDelayGreen = 1000-onDelayGreen;
+	//unsigned onDelayGreen = *(float*)dutyCycle * 1000;
+	//unsigned offDelayGreen = 1000-onDelayGreen;
 	while (1) {
 		GPIOB->BSRR = (1<<15);			//LED on: set PortB.15
 		delayUS_DWT(onDelayGreen);
 		GPIOB->BRR = (1<<15);				//LED off: clear PortB.15
-		delayUS_DWT(offDelayGreen);
+		delayUS_DWT(1000-onDelayGreen);
 	}
 }
 
 void AutoReset (void const *resetDelay) {
-	delayUS_DWT(*(float*)resetDelay);	//AutoReset delay
+	delayUS_DWT(10000);	//AutoReset delay
 	NVIC_SystemReset(); //Resets microcontroller
 }
 
+void RGB_ratio(Point* red, Point* green, Point* blue, Point* target){
+	//float brightness; //brightness between 0 and 1
+	//brightness = 1.0f * readADC1(0)/4095; //Brightness (direction reversed)
+	
+	
+	// For derivation of ratios see 
+	// http://www.ledsmagazine.com/articles/print/volume-10/issue-6/features/understand-rgb-led-mixing-ratios-to-realize-optimal-color-in-signs-and-displays-magazine.html
+	float mRB = (red->y - blue->y)/(red->x-blue->x);
+	float cRB = blue->y - mRB*blue->x;
 
-//Clamps number within lower and upper limit
-float clamp(float number, float lower_limit, float upper_limit) {
-    if (number < lower_limit) {
-        return lower_limit;
-    } else if (number > upper_limit) {
-        return upper_limit;
-    } else {
-        return number;
-    }
+	float mGD = (green->y-target->y)/(green->x-target->x);
+	float cGD = green->y-mGD*green->x;
+	/*
+	float xP = (cGD-cRB)/(mRB-mGD);
+	float yP = mRB * xP + cRB;
+	*/
+	
+	mGD = (cGD-cRB)/(mRB-mGD);
+	mRB = mRB * mGD + cRB;
+
+	/*
+	float R_RB = -(red.y/blue.y)*(blue.y-yP) / (red.y-yP);
+	float R_GP = -(green.y/yP)*(yP-target.y) / (green.y-target.y);
+	float ratio_R = (R_RB)/(R_RB+1); 	//Red
+	float ratio_G = R_GP;							//Green
+	float ratio_B = 1/(R_RB+1);				//Blue
+	float total_ratio = ratio_R + ratio_G + ratio_B;
+	*/
+	
+	cGD = -(red->y/blue->y)*(blue->y-mRB) / (red->y-mRB);
+	mGD = -(green->y/mRB)*(mRB-target->y) / (green->y-target->y);
+	
+	mRB = (cGD)/(cGD+1); 	//Red
+	//ratio_G = mGD;							//Green
+	cRB = 1/(cGD+1);				//Blue
+	cGD = mRB + mGD + cRB;
+	
+	
+	/*
+	dutyCycles[0] = brightness * ((0.466f / total_ratio * ratio_R)/1.315f); 	//Red duty cycle
+	dutyCycles[1] = brightness * ((0.466f / total_ratio * ratio_G)/2.553f); //Green duty cycle
+	dutyCycles[2] = brightness * ((0.466f / total_ratio * ratio_B)/0.466f);	//Blue duty cycle
+	*/
+	
+	//float brightness; //brightness between 0 and 1
+	//brightness = 1.0f * readADC1(0)/4095; //Brightness (direction reversed)
+	onDelayRed = 1000* ((0.466f / cGD * mRB)/1.315f); //Red duty cycle
+	mRB = readADC1(0)/4095.f;
+	onDelayRed = onDelayRed * mRB ;
+	onDelayGreen = (mRB * ((0.466f / cGD * mGD)/2.f)) * 1000; //Green duty cycle
+	onDelayBlue = (mRB * ((0.466f / cGD * cRB)/0.466f)) * 1000;	//Blue duty cycle
 }
 
-//Moves point pointToMove within area limited by the corners of the triangle
-void MovePointWithinTriangle( const Point* triangle, Point* pointToMove ) {
-    Point edge0 = {(triangle[1].x - triangle[0].x), ((triangle[1].y - triangle[0].y))};
-    Point edge1 = {(triangle[2].x - triangle[0].x), ((triangle[2].y - triangle[0].y))};
-    Point v0 = {(triangle[0].x - pointToMove->x), (triangle[0].y - pointToMove->y)};
+int PointInTriangle(Point* p, Point* p0, Point* p1, Point* p2){
+	//float area = 0.5 *(-p1->y*p2->x + p0->y*(-p1->x + p2->x) + p0->x*(p1->y - p2->y) + p1->x*p2->y);
+	float s = p0->y*p2->x - p0->x*p2->y + (p2->y - p0->y)*p->x + (p0->x - p2->x)*p->y;
+	float t = p0->x*p1->y - p0->y*p1->x + (p0->y - p1->y)*p->x + (p1->x - p0->x)*p->y;
+	//return s > 0 && t > 0 && s + t < 2 * area;
+	return s > 0 && t > 0 && s + t < 2 * 0.188567;
+}
 
-    float a = edge0.x*edge0.x + edge0.y*edge0.y;
-    float b = edge0.x*edge1.x + edge0.y*edge1.y;
-    float c = edge1.x*edge1.x + edge1.y*edge1.y;
-    float d = edge0.x*v0.x +  edge0.y*v0.y;
-    float e = edge1.x*v0.x + edge1.y*v0.y;
-
-    float det = a*c - b*b;
-    float s = b*e - c*d;
-    float t = b*d - a*e;
-
-    if ( s + t < det ){
-        if ( s < 0.f ){
-            if ( t < 0.f ){
-                if ( d < 0.f ){
-                    s = clamp( -d/a, 0.f, 1.f );
-                    t = 0.f;
-                }
-                else {
-                    s = 0.f;
-                    t = clamp( -e/c, 0.f, 1.f );
-                }
-            }
-            else{
-                s = 0.f;
-                t = clamp( -e/c, 0.f, 1.f );
-            }
-        }
-        else if ( t < 0.f ){
-            s = clamp( -d/a, 0.f, 1.f );
-            t = 0.f;
-        }
-        else {
-            float invDet = 1.f / det;
-            s *= invDet;
-            t *= invDet;
-        }
-    }
-    else {
-        if ( s < 0.f ) {
-            float tmp0 = b+d;
-            float tmp1 = c+e;
-            if ( tmp1 > tmp0 ) {
-                float numer = tmp1 - tmp0;
-                float denom = a-2*b+c;
-                s = clamp( numer/denom, 0.f, 1.f );
-                t = 1-s;
-            }
-            else {
-                t = clamp( -e/c, 0.f, 1.f );
-                s = 0.f;
-            }
-        }
-        else if ( t < 0.f ) {
-            if ( a+d > b+e ) {
-                float numer = c+e-b-d;
-                float denom = a-2*b+c;
-                s = clamp( numer/denom, 0.f, 1.f );
-                t = 1-s;
-            }
-            else {
-                s = clamp( -e/c, 0.f, 1.f );
-                t = 0.f;
-            }
-        }
-        else {
-            float numer = c+e-b-d;
-            float denom = a-2*b+c;
-            s = clamp( numer/denom, 0.f, 1.f );
-            t = 1.f - s;
-        }
-    }
-    //pointToMove->x = triangle[0].x + s * edge0.x + t * edge1.x;
-    //pointToMove->y = triangle[0].y + s * edge0.y + t * edge1.y;
-		//pointToMove[0].x = 0.5;
-		//pointToMove[0].y = 0.5;
-		
+void movePointWithinTriangle(Point* target, Point* red, Point* green, Point* blue) {
+	Point vectorTowardsMiddle;
+	vectorTowardsMiddle.x = (((red->x + green->x + blue->x) / 3) - target->x ) / 100;
+	vectorTowardsMiddle.y = (((red->y + green->y + blue->y) / 3) - target->y ) / 100;
+	while (!PointInTriangle(target, red, green, blue)) {
+		target->x += vectorTowardsMiddle.x;
+		target->y += vectorTowardsMiddle.y;
+	}
 }
 
 

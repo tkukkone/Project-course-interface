@@ -24,7 +24,7 @@ void ADC_Configuration(void)
   /* Conversions are 12 bit - put them in the lower 12 bits of the result */
   ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
   /* 3 channels used by the sequencer */
-  ADC_InitStructure.ADC_NbrOfChannel = 3;
+  ADC_InitStructure.ADC_NbrOfChannel = 4;
 
   /* Now do the setup */
   ADC_Init(ADC1, &ADC_InitStructure);

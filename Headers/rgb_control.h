@@ -6,7 +6,7 @@
 void Red (void const *dutyCycle);
 void Blue (void const *dutyCycle);
 void Green (void const *dutyCycle);
-void AutoReset (void const *resetDelay) ;
+void AutoReset (void const *resetDelay);
 
 
 typedef struct Point{
@@ -15,17 +15,9 @@ typedef struct Point{
 } Point;
 
 //Moves point pointToMove to closest location that is within the triangle
-//Modified from https://www.gamedev.net/topic/552906-closest-point-on-triangle/
-//
-//Example use:
-//Point p0 = {2, 1};
-//Point p1 = {3, 4};
-//Point p2 = {6, 1};
-//Point triangle[3] = {p0, p1, p2};
-//Point sourcePos = {3,2.122};
-//Point* pointToMove = &sourcePos;
-//MovePointWithinTriangle(triangle, pointToMove);
-void MovePointWithinTriangle( const Point* triangle, Point* pointToMove);
+void movePointWithinTriangle(Point* target, Point* red, Point* green, Point* blue);
+int PointInTriangle(Point* p, Point* p0, Point* p1, Point* p2);
+void RGB_ratio(Point* red, Point* green, Point* blue, Point* target);
 
 #endif //DELAY_MICROSECONDS
 

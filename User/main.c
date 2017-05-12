@@ -5,55 +5,20 @@
 #define osObjectsPublic                     // define objects in main module
 #include "osObjects.h"                      // RTOS object definitions
 #include "stm32f10x.h"                  		// Device header
-#include "rgb_control.h"
 #include "delay.h"
 #include "adc.h"
-
-
-	/************ Luminous fluxes ***********/
-float red_lm = 1.315; 		// maximum brightness of red, measured in lab.
-float green_lm	= 2.553;	// maximum brightness of green, measured in lab.
-float blue_lm = 0.466;  // maximum brightness of blue, measured in lab.
-Point target = {0.2, 0.2}; //SET TARGET COLOR HERE (disable potcontrol first!)
-float brightness = 1.0; //brightness between 0 and 1
+#include "rgb_control.h"
 
 
 
-void RGB_ratio(Point target, float dutyCycles[]){
-	Point red = {0.6907, 0.3092};
-	Point green = {0.1516, 0.7445};
-	Point blue = {0.1296, 0.0627};
-	Point triangle[] = {red, green, blue};
-	//MovePointWithinTriangle(triangle, &target); 
-	
-	
-	// For derivation of ratios see 
-	// http://www.ledsmagazine.com/articles/print/volume-10/issue-6/features/understand-rgb-led-mixing-ratios-to-realize-optimal-color-in-signs-and-displays-magazine.html
-	float mRB = (red.y - blue.y)/(red.x-blue.x);
-	float cRB = blue.y - mRB*blue.x;
 
-	float mGD = (green.y-target.y)/(green.x-target.x);
-	float cGD = green.y-mGD*green.x;
 
-	float xP = (cGD-cRB)/(mRB-mGD);
-	float yP = mRB * xP + cRB;
-
-	float R_RB = -(red.y/blue.y)*(blue.y-yP) / (red.y-yP);
-	float R_GP = -(green.y/yP)*(yP-target.y) / (green.y-target.y);
-	float ratio_R = (R_RB)/(R_RB+1); 	//Red
-	float ratio_G = R_GP;							//Green
-	float ratio_B = 1/(R_RB+1);				//Blue
-	float total_ratio = ratio_R + ratio_G + ratio_B;
-	dutyCycles[0] = (blue_lm / total_ratio * ratio_R)/red_lm; 	//Red duty cycle
-	dutyCycles[1] = (blue_lm / total_ratio * ratio_G)/green_lm; //Green duty cycle
-	dutyCycles[2] = (blue_lm / total_ratio * ratio_B)/blue_lm;	//Blue duty cycle
-}
 
 	/***********Defining Threads************/
 osThreadDef(Red, osPriorityNormal, 1, 0); //Define Red PWM Thread
 osThreadDef(Blue, osPriorityNormal, 1, 0); //Define Blue PWM Thread
 osThreadDef(Green, osPriorityNormal, 1, 0); //Define Green PWM Thread
-osThreadDef(AutoReset, osPriorityNormal, 1, 0); //Define AutoReset thread
+//osThreadDef(AutoReset, osPriorityNormal, 1, 0); //Define AutoReset thread
 
 // main: initialize and start the system
 int main (void) {
@@ -76,28 +41,38 @@ int main (void) {
 	/******************* ADC ******************/
 	// Comment these lines to disable potcontrol
 	ADC_Configuration(); //	12-bit ADC potentiometer reading config
-	//brightness = 1.000 - (1.100 * readADC1(0))/4095; //Brightness (direction reversed)
-	//target.x = 0.750 - (0.800 * readADC1(1))/4095; //x (direction reversed)
-	//target.y = 0.800 - (0.900 * readADC1(2))/4095; //y (direction reversed)
+	
 
 
-	float resetDelay = 10000; // AutoReset delay (us)
+	//float resetDelay = 10000; // AutoReset delay (us)
 	
 	/**************** Duty cycles ****************/
-	float dutyCycles[3];
-	RGB_ratio(target, dutyCycles);
+	//float dutyCycles[3];
+	 //SET TARGET COLOR HERE (disable potcontrol first!)
+	Point target;
+	Point red = {0.6907f, 0.3092f};
+	Point green = {0.1516f, 0.7445f}; 
+	Point blue = {0.1296f, 0.0627f};
 	
-	float dutyCycleRed = dutyCycles[0] * brightness;
-	float dutyCycleGreen = dutyCycles[1] * brightness;
-	float dutyCycleBlue = dutyCycles[2] * brightness;
+	target.x = 0.7f * readADC1(1)/4095; //x (direction reversed)
+	target.y = 0.8f * readADC1(2)/4095; //y (direction reversed)
+	movePointWithinTriangle(&target, &red, &green, &blue);
+	RGB_ratio(&red, &green, &blue, &target);
+	
+
+	//float dutyCycleRed = dutyCycles[0];
+	//float dutyCycleGreen = dutyCycles[1];
+	//float dutyCycleBlue = dutyCycles[2];
 	
 	/******************* Threads ******************/
 	// create 'thread' functions that start executing,
   // example: tid_name = osThreadCreate (osThread(name), NULL);
-	osThreadCreate(osThread(Green), &dutyCycleGreen); 	
-	osThreadCreate(osThread(Red), &dutyCycleRed); 	
-	osThreadCreate(osThread(Blue), &dutyCycleBlue); 
-	osThreadCreate(osThread(AutoReset), &resetDelay); //AutoReset thread
+	osThreadCreate(osThread(Red), NULL); 
+	osThreadCreate(osThread(Green), NULL); 	
+	osThreadCreate(osThread(Blue), NULL); 
+	//osThreadCreate(osThread(AutoReset), NULL); //AutoReset thread
 	
   osKernelStart ();                         // start thread execution 
+	delayUS_DWT(10000);	//AutoReset delay
+	NVIC_SystemReset(); //Resets microcontroller
 }
