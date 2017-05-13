@@ -42,6 +42,11 @@ int main (void) {
 	Point red = {0.6907f, 0.3092f};
 	Point green = {0.1516f, 0.7445f}; 
 	Point blue = {0.1296f, 0.0627f};
+		
+	/*UNCOMMENT THESE WITH NEW LEDS*/
+	//Point red = {0.7070f, 0.2929f};
+	//Point green = {0.1499f, 0.6990f}; 
+	//Point blue = {0.1399f, 0.0562f};
 	
 	target.x = 0.7f * readADC1(1)/4095; //x (direction reversed)
 	target.y = 0.8f * readADC1(2)/4095; //y (direction reversed)

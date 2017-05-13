@@ -82,9 +82,9 @@ void RGB_ratio(Point* red, Point* green, Point* blue, Point* target){
 	
 	
 	/*
-	dutyCycles[0] = brightness * ((0.466f / total_ratio * ratio_R)/1.315f); 	//Red duty cycle
-	dutyCycles[1] = brightness * ((0.466f / total_ratio * ratio_G)/2.553f); //Green duty cycle
-	dutyCycles[2] = brightness * ((0.466f / total_ratio * ratio_B)/0.466f);	//Blue duty cycle
+	dutyCycles[0] = brightness * ((blue_lm / total_ratio * ratio_R)/red_lm); 	//Red duty cycle
+	dutyCycles[1] = brightness * ((blue_lm / total_ratio * ratio_G)/green_lm); //Green duty cycle
+	dutyCycles[2] = brightness * ((blue_lm / total_ratio * ratio_B)/blue_lm);	//Blue duty cycle
 	*/
 	
 	//change brightnesses here
@@ -93,6 +93,12 @@ void RGB_ratio(Point* red, Point* green, Point* blue, Point* target){
 	onDelayRed = (brightness * ((0.466f / cGD * mRB)/1.315f)) * 1000; //Red duty cycle
 	onDelayGreen = (brightness * ((0.466f / cGD * mGD)/2.553f)) * 1000; //Green duty cycle
 	onDelayBlue = (brightness  * ((0.466f / cGD * cRB)/0.466f)) * 1000;	//Blue duty cycle
+	
+	/*UNCOMMENT THESE WITH NEW LEDS*/
+	//onDelayRed = (brightness * ((0.573f / cGD * mRB)/2.350f)) * 1000; //Red duty cycle
+	//onDelayGreen = (brightness * ((0.573f / cGD * mGD)/5.400f)) * 1000; //Green duty cycle
+	//onDelayBlue = (brightness  * ((0.573f / cGD * cRB)/0.573f)) * 1000;	//Blue duty cycle
+	
 }
 
 int PointInTriangle(Point* p, Point* p0, Point* p1, Point* p2){
