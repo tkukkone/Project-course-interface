@@ -9,16 +9,10 @@
 #include "adc.h"
 #include "rgb_control.h"
 
-
-
-
-
-
 	/***********Defining Threads************/
 osThreadDef(Red, osPriorityNormal, 1, 0); //Define Red PWM Thread
 osThreadDef(Blue, osPriorityNormal, 1, 0); //Define Blue PWM Thread
 osThreadDef(Green, osPriorityNormal, 1, 0); //Define Green PWM Thread
-//osThreadDef(AutoReset, osPriorityNormal, 1, 0); //Define AutoReset thread
 
 // main: initialize and start the system
 int main (void) {
@@ -42,13 +36,8 @@ int main (void) {
 	// Comment these lines to disable potcontrol
 	ADC_Configuration(); //	12-bit ADC potentiometer reading config
 	
-
-
-	//float resetDelay = 10000; // AutoReset delay (us)
 	
-	/**************** Duty cycles ****************/
-	//float dutyCycles[3];
-	 //SET TARGET COLOR HERE (disable potcontrol first!)
+	/**************** Color coordinates ****************/
 	Point target;
 	Point red = {0.6907f, 0.3092f};
 	Point green = {0.1516f, 0.7445f}; 
@@ -60,18 +49,13 @@ int main (void) {
 	RGB_ratio(&red, &green, &blue, &target);
 	
 
-	//float dutyCycleRed = dutyCycles[0];
-	//float dutyCycleGreen = dutyCycles[1];
-	//float dutyCycleBlue = dutyCycles[2];
-	
 	/******************* Threads ******************/
 	// create 'thread' functions that start executing,
   // example: tid_name = osThreadCreate (osThread(name), NULL);
 	osThreadCreate(osThread(Red), NULL); 
 	osThreadCreate(osThread(Green), NULL); 	
 	osThreadCreate(osThread(Blue), NULL); 
-	//osThreadCreate(osThread(AutoReset), NULL); //AutoReset thread
-	
+
   osKernelStart ();                         // start thread execution 
 	delayUS_DWT(10000);	//AutoReset delay
 	NVIC_SystemReset(); //Resets microcontroller

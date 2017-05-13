@@ -20,7 +20,7 @@ void Red (void const *dutyCycle) {
 		GPIOB->BSRR = (1<<13);			//LED on: set PortB.13
 		delayUS_DWT(onDelayRed);					//pause
 		GPIOB->BRR = (1<<13);				//LED off: clear PortB.13
-		delayUS_DWT(1000-onDelayRed);					//pause
+		delayUS_DWT(1000-onDelayRed);			//pause
 	}
 }
 
@@ -46,18 +46,10 @@ void Green (void const *dutyCycle) {
 	}
 }
 
-void AutoReset (void const *resetDelay) {
-	delayUS_DWT(10000);	//AutoReset delay
-	NVIC_SystemReset(); //Resets microcontroller
-}
-
 void RGB_ratio(Point* red, Point* green, Point* blue, Point* target){
-	//float brightness; //brightness between 0 and 1
-	//brightness = 1.0f * readADC1(0)/4095; //Brightness (direction reversed)
-	
-	
 	// For derivation of ratios see 
 	// http://www.ledsmagazine.com/articles/print/volume-10/issue-6/features/understand-rgb-led-mixing-ratios-to-realize-optimal-color-in-signs-and-displays-magazine.html
+	// Variable are being recycled to save memory.
 	float mRB = (red->y - blue->y)/(red->x-blue->x);
 	float cRB = blue->y - mRB*blue->x;
 
@@ -95,16 +87,16 @@ void RGB_ratio(Point* red, Point* green, Point* blue, Point* target){
 	dutyCycles[2] = brightness * ((0.466f / total_ratio * ratio_B)/0.466f);	//Blue duty cycle
 	*/
 	
+	//change brightnesses here
 	//float brightness; //brightness between 0 and 1
-	//brightness = 1.0f * readADC1(0)/4095; //Brightness (direction reversed)
-	onDelayRed = 1000* ((0.466f / cGD * mRB)/1.315f); //Red duty cycle
-	mRB = readADC1(0)/4095.f;
-	onDelayRed = onDelayRed * mRB ;
-	onDelayGreen = (mRB * ((0.466f / cGD * mGD)/2.f)) * 1000; //Green duty cycle
-	onDelayBlue = (mRB * ((0.466f / cGD * cRB)/0.466f)) * 1000;	//Blue duty cycle
+	float brightness = 1.0f * readADC1(0)/4095; //Brightness (direction reversed)
+	onDelayRed = (brightness * ((0.466f / cGD * mRB)/1.315f)) * 1000; //Red duty cycle
+	onDelayGreen = (brightness * ((0.466f / cGD * mGD)/2.553f)) * 1000; //Green duty cycle
+	onDelayBlue = (brightness  * ((0.466f / cGD * cRB)/0.466f)) * 1000;	//Blue duty cycle
 }
 
 int PointInTriangle(Point* p, Point* p0, Point* p1, Point* p2){
+	//area has to be precalculated, causes stack overflow otherwise
 	//float area = 0.5 *(-p1->y*p2->x + p0->y*(-p1->x + p2->x) + p0->x*(p1->y - p2->y) + p1->x*p2->y);
 	float s = p0->y*p2->x - p0->x*p2->y + (p2->y - p0->y)*p->x + (p0->x - p2->x)*p->y;
 	float t = p0->x*p1->y - p0->y*p1->x + (p0->y - p1->y)*p->x + (p1->x - p0->x)*p->y;
