@@ -9,7 +9,7 @@
 //float blue_lm = 0.466;  // maximum brightness of blue, measured in lab.
 //Point target = {0.2, 0.2}; //SET TARGET COLOR HERE (disable potcontrol first!)
 
-unsigned onDelayRed;
+unsigned onDelayRed = 1000;
 unsigned onDelayGreen;
 unsigned onDelayBlue;
 
@@ -90,14 +90,14 @@ void RGB_ratio(Point* red, Point* green, Point* blue, Point* target){
 	//change brightnesses here
 	//float brightness; //brightness between 0 and 1
 	float brightness = 1.0f * readADC1(0)/4095; //Brightness (direction reversed)
-	onDelayRed = (brightness * ((0.466f / cGD * mRB)/1.315f)) * 1000; //Red duty cycle
-	onDelayGreen = (brightness * ((0.466f / cGD * mGD)/2.553f)) * 1000; //Green duty cycle
-	onDelayBlue = (brightness  * ((0.466f / cGD * cRB)/0.466f)) * 1000;	//Blue duty cycle
+	//onDelayRed = (brightness * ((0.466f / cGD * mRB)/1.315f)) * 1000; //Red duty cycle
+	//onDelayGreen = (brightness * ((0.466f / cGD * mGD)/2.553f)) * 1000; //Green duty cycle
+	//onDelayBlue = (brightness  * ((0.466f / cGD * cRB)/0.466f)) * 1000;	//Blue duty cycle
 	
 	/*UNCOMMENT THESE WITH NEW LEDS*/
-	//onDelayRed = (brightness * ((0.573f / cGD * mRB)/2.350f)) * 1000; //Red duty cycle
-	//onDelayGreen = (brightness * ((0.573f / cGD * mGD)/5.400f)) * 1000; //Green duty cycle
-	//onDelayBlue = (brightness  * ((0.573f / cGD * cRB)/0.573f)) * 1000;	//Blue duty cycle
+	onDelayRed = (brightness * ((0.329f / cGD * mRB)/2.01f)) * 1000; //Red duty cycle
+	onDelayGreen = (brightness * ((0.329f / cGD * mGD)/4.15f)) * 1000; //Green duty cycle
+	onDelayBlue = (brightness  * ((0.329f / cGD * cRB)/0.329f)) * 1000;	//Blue duty cycle
 	
 }
 
@@ -107,7 +107,9 @@ int PointInTriangle(Point* p, Point* p0, Point* p1, Point* p2){
 	float s = p0->y*p2->x - p0->x*p2->y + (p2->y - p0->y)*p->x + (p0->x - p2->x)*p->y;
 	float t = p0->x*p1->y - p0->y*p1->x + (p0->y - p1->y)*p->x + (p1->x - p0->x)*p->y;
 	//return s > 0 && t > 0 && s + t < 2 * area;
-	return s > 0 && t > 0 && s + t < 2 * 0.188567;
+	//return s > 0 && t > 0 && s + t < 2 * 0.188567;
+	return s > 0 && t > 0 && s + t < 2 * 0.1833699f;
+	
 }
 
 void movePointWithinTriangle(Point* target, Point* red, Point* green, Point* blue) {

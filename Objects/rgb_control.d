@@ -32,3 +32,5 @@
 .\objects\rgb_control.o: .\STM32F10x_StdPeriph_Driver\inc\stm32f10x_wwdg.h
 .\objects\rgb_control.o: .\STM32F10x_StdPeriph_Driver\inc\misc.h
 .\objects\rgb_control.o: .\Headers\delay.h
+.\objects\rgb_control.o: .\Headers\adc.h
+.\objects\rgb_control.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

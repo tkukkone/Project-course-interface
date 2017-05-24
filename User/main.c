@@ -39,18 +39,19 @@ int main (void) {
 	
 	/**************** Color coordinates ****************/
 	Point target;
-	Point red = {0.6907f, 0.3092f};
-	Point green = {0.1516f, 0.7445f}; 
-	Point blue = {0.1296f, 0.0627f};
+	//Point red = {0.6907f, 0.3092f};
+	//Point green = {0.1516f, 0.7445f}; 
+	//Point blue = {0.1296f, 0.0627f};
 		
 	/*UNCOMMENT THESE WITH NEW LEDS*/
-	//Point red = {0.7070f, 0.2929f};
-	//Point green = {0.1499f, 0.6990f}; 
-	//Point blue = {0.1399f, 0.0562f};
+	Point red = {0.7020f, 0.2961f}; 
+	Point green = {0.1468f, 0.7022f}; 
+	Point blue = {0.1403f, 0.0464f}; 
 	
-	target.x = 0.7f * readADC1(1)/4095; //x (direction reversed)
-	target.y = 0.8f * readADC1(2)/4095; //y (direction reversed)
+	target.x = 0.75f * readADC1(1)/4095; //x (direction reversed)
+	target.y = 0.85f * readADC1(2)/4095; //y (direction reversed)
 	movePointWithinTriangle(&target, &red, &green, &blue);
+	
 	RGB_ratio(&red, &green, &blue, &target);
 	
 
